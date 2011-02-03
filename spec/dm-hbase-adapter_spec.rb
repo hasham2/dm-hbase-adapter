@@ -4,7 +4,7 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe DataMapper::Adapters::HbaseAdapter do
   
   before :all do
-    attrs = {:id => "#{Time.now.to_s}", :name => "Hasham", :age => 32}
+    attrs = {:name => "Hasham", :age => 32}
     @person = Person.new(attrs)
   end
 
@@ -15,14 +15,20 @@ describe DataMapper::Adapters::HbaseAdapter do
     @person.save.should be_true
   end
 
-#  #describe 'with a saved record ' do
+  describe 'with a saved record ' do
+    before(:each) { @person.save }
+    after(:each) { @person.destroy }
+    it 'should get all records in collection of objects with properties saved' do
+      Person.all.length.should == 2
+      Person.all.first.class.should == Person
+      Person.all.first.age.should == 32
+      Person.all.last.name.should == "Hasham"
+    end
+  end
+
+#  describe 'with a saved object check query interface' do
 #    before(:each) { @person.save }
 #    after(:each) { @person.destroy }
-#    it 'should get a record' do
-#      person.get!(@person.id, @person.name)
-#      person.should_not be_nil
-#      person.age.should == @person.age
-#    end  
-#  #end
+#  end
 
 end

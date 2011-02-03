@@ -2,6 +2,7 @@ require 'dm-core'
 require 'dm-core/adapters/abstract_adapter'
 require 'stargate'
 require 'ruby-debug'
+
 module DataMapper::Adapters
   
   class HbaseAdapter < AbstractAdapter
@@ -16,7 +17,7 @@ module DataMapper::Adapters
     def create(resources)
       created = 0
       resources.each do |resource|
-        initialize_serial(resource, Time.now.to_i) #set the key as Timestamp
+        initialize_serial(resource, Time.now.to_i) #set the serial field as Timestamp
         if save(resource.model.storage_name, key(resource), resource)
           created += 1
         end
@@ -32,7 +33,8 @@ module DataMapper::Adapters
       rows.each do |row|
         record = Hash.new
         row.columns.each do |col|
-          record.merge!({col.name => col.value})
+          column_name = col.name.split(':').last
+          record.merge!({column_name => col.value})
         end
        records << record
       end
@@ -63,14 +65,15 @@ module DataMapper::Adapters
 
     def key(resource)
       model = resource.model
-      key = resource.key.join('/')
-      "#{model}/#{Time.now}"
+      #resource.key ||= "#{Time.now.to_i}"
+      "#{model}-#{resource.id}"
     end
 
     def save(table, identifier, resource)
       saved = true
       attrs = []
       resource.attributes.each_pair do |key, val|
+        val = (val.instance_of? String) ? val : val.to_s
         attrs << {:name => 'attribute:'+key.to_s, :value => val}
       end
       unless @db.create_row(table, identifier, Time.now.to_i, attrs)

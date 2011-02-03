@@ -11,7 +11,7 @@ DataMapper.setup(:default,
 class Person
   include DataMapper::Resource
 
-  property :id,         String
+  property :id,         Serial
   property :name,       String
   property :age,        Integer
 
